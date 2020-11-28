@@ -1,13 +1,16 @@
 import os
-
-import fastapi
 import pathlib
 import hashlib
+
+import fastapi
+from fastapi.templating import Jinja2Templates
 
 app = fastapi.FastAPI()
 
 VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./video_uploads"
 os.makedirs(VIDEO_ROOT, exist_ok=True)
+
+templates = Jinja2Templates(directory="./templates")
 
 @app.get("/")
 async def hello():
@@ -32,3 +35,6 @@ async def upload(video: fastapi.UploadFile = fastapi.File(...)):
     return {"hello": "world"}
 
 
+@app.get("/upload/")
+async def upload_page(request: fastapi.Request):
+    return templates.TemplateResponse("upload.html", {"request": request})
