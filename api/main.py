@@ -58,3 +58,4 @@ def baptise(filename, content):
 def dump(given_name, content):
     full_path = pathlib.Path(VIDEO_ROOT).joinpath(given_name)
     open(full_path, "wb").write(content)
+
