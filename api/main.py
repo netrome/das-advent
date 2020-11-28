@@ -38,3 +38,11 @@ async def upload(video: fastapi.UploadFile = fastapi.File(...)):
 @app.get("/upload/")
 async def upload_page(request: fastapi.Request):
     return templates.TemplateResponse("upload.html", {"request": request})
+
+
+@app.post("/dbg/")
+async def upload_page(request: fastapi.Request):
+    print(request.headers)
+    form = await request.form()
+    print(form)
+    return {"ok", "something"}
