@@ -1,4 +1,4 @@
-Das advent calendar
+Das advent calendar by Mårten and Ruth
 
 # Uploading a file to the API using the Python console example
 ```
