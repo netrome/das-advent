@@ -1,0 +1,4 @@
+*.swp
+video_uploads
+*.pyc
+__pycache__
