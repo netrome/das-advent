@@ -1,1 +1,1 @@
-Das advent calendar
+Das advent calendar by Mårten and Ruth
