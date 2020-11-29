@@ -64,13 +64,18 @@ async def upload(video: fastapi.UploadFile = fastapi.File(...)):
 # Views ---
 
 @app.get("/view_all/")
-async def upload_page(request: fastapi.Request):
+async def view_all(request: fastapi.Request):
     return templates.TemplateResponse("view_all.html", {"request": request})
 
 
 @app.get("/upload/")
 async def upload_page(request: fastapi.Request):
     return templates.TemplateResponse("upload.html", {"request": request})
+
+
+@app.get("/")
+async def calendar(request: fastapi.Request):
+    return templates.TemplateResponse("calendar.html", {"request": request})
 
 
 ## Helpers ---
