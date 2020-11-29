@@ -2,7 +2,6 @@
 video_uploads
 *.pyc
 __pycache__
-static
 templates
 elm-stuff
 app_state
