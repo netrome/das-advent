@@ -1,5 +1,6 @@
 from typing import List, Set
 
+import datetime
 import hashlib
 import json
 import os
@@ -13,7 +14,9 @@ import pydantic
 
 
 VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./video_uploads"
-STATE_ROOT = "./app_state"
+STATE_ROOT = os.environ["DAS_STATE_ROOT"] if "STATE_ROOT" in os.environ else "./app_state"
+DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAY_ZERO" in os.environ else "2020-11-25"
+
 os.makedirs(VIDEO_ROOT, exist_ok=True)
 os.makedirs(STATE_ROOT, exist_ok=True)
 
@@ -34,7 +37,7 @@ class Greeting(pydantic.BaseModel):
 
 @app.get("/calendar_info/", response_model=List[Greeting])
 async def calendar():
-    return greetings_of_the_day(8)
+    return greetings_of_the_day(today())
 
 
 @app.get("/videos/")
@@ -132,3 +135,6 @@ def assign_new(already_assigned: Set[str]) -> str:
         return chosen
     return ""
 
+
+def today() -> int:
+    return (datetime.date.today() - datetime.date.fromisoformat(DAY_ZERO)).days
