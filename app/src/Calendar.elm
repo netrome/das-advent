@@ -133,10 +133,19 @@ view model =
 mainDisplay : Content -> Element.Element Msg
 mainDisplay content =
     Element.column []
-        [ styledHeader
+        [ uploadLink
+        , styledHeader
         , poweredBy
         , displayContent content
         ]
+
+
+uploadLink : Element.Element Msg
+uploadLink =
+    Element.link [ Font.color niceWhite, fancyFont, Element.padding 20, Element.alignRight ]
+        { url = "/upload/"
+        , label = Element.text "Ladda upp din egna hälsning"
+        }
 
 
 styledHeader : Element.Element Msg

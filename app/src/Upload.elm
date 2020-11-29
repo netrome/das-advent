@@ -155,7 +155,10 @@ innerView model =
             h1 [] [ text (String.fromInt (round (100 * fraction)) ++ "%") ]
 
         Done ->
-            h1 [] [ text "DONE" ]
+            div []
+                [ h1 [] [ text "Toppen" ]
+                , a [ href "/" ] [ text "Tillbaka" ]
+                ]
 
         Fail ->
             h1 [] [ text "FAIL" ]
