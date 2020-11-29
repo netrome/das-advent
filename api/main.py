@@ -116,6 +116,9 @@ def greetings_of_the_day(day: int) -> List[Greeting]:
     if live_greetings != stored_greetings:
         dump_greetings(path, live_greetings)
 
+    random.seed(2020)
+    random.shuffle(live_greetings)
+
     return live_greetings
 
 
