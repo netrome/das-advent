@@ -117,10 +117,10 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    Element.layout [ Background.tiled "/static/seamless_snow.jpg" ]
+    Element.layout [ Background.image "/static/dark-blue.jpg" ]
         (case model of
             HasContent content ->
-                displayContent content
+                mainDisplay content
 
             Error reason ->
                 Element.text reason
@@ -130,21 +130,64 @@ view model =
         )
 
 
+mainDisplay : Content -> Element.Element Msg
+mainDisplay content =
+    Element.column []
+        [ styledHeader
+        , poweredBy
+        , displayContent content
+        ]
+
+
+styledHeader : Element.Element Msg
+styledHeader =
+    Element.el
+        [ Font.size 60
+        , Font.shadow { offset = ( 1, 0.5 ), blur = 5, color = niceDark }
+        , Font.color niceWhite
+        , Element.centerX
+        , Element.centerY
+        , fancyFont
+        , Element.padding 10
+        ]
+        (Element.text "Familjens adventskalender 2020")
+
+
+poweredBy : Element.Element Msg
+poweredBy =
+    Element.el
+        [ Font.size 30
+        , Font.shadow { offset = ( 1, 0.5 ), blur = 5, color = niceDark }
+        , Font.color niceWhite
+        , Element.centerX
+        , Element.centerY
+        , fancyFont
+        , Element.padding 10
+        ]
+        (Element.text "av Mårten och Ruth")
+
+
 displayContent : Content -> Element.Element Msg
 displayContent content =
-    Element.wrappedRow [] <|
+    Element.wrappedRow
+        [ Element.spaceEvenly
+        , Element.padding 40
+        ]
+    <|
         List.map greetingBox
             content.greetings
 
 
 greetingBox : Greeting -> Element.Element Msg
 greetingBox greeting =
-    case greeting.flipped of
-        True ->
-            greetingVideo greeting
+    Element.el [ Element.padding 20 ]
+        (case greeting.flipped of
+            True ->
+                greetingVideo greeting
 
-        False ->
-            greetingCard greeting
+            False ->
+                greetingCard greeting
+        )
 
 
 greetingCard : Greeting -> Element.Element Msg
@@ -154,8 +197,9 @@ greetingCard greeting =
         , Element.height <| Element.px cardHeight
         , Element.width <| Element.px cardWidth
         , Events.onClick <| Flipped greeting.day
+        , Element.pointer
         ]
-        { src = "/static/pink_card.jpg", description = "A christmas card" }
+        { src = "/static/spark-card.jpg", description = "A christmas card" }
 
 
 styledDay : Greeting -> Element.Element Msg
@@ -233,6 +277,17 @@ cardNumberFont =
         [ Font.external
             { name = "Nerko One"
             , url = "https://fonts.googleapis.com/css2?family=Nerko+One&display=swap"
+            }
+        , Font.sansSerif
+        ]
+
+
+fancyFont : Element.Attribute Msg
+fancyFont =
+    Font.family
+        [ Font.external
+            { name = "Dancing Script"
+            , url = "https://fonts.googleapis.com/css2?family=Dancing+Script&display=swa"
             }
         , Font.sansSerif
         ]
