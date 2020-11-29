@@ -15,6 +15,7 @@ import pydantic
 
 VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./video_uploads"
 STATE_ROOT = os.environ["DAS_STATE_ROOT"] if "STATE_ROOT" in os.environ else "./app_state"
+STATIC_ROOT = "./static/"
 DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAY_ZERO" in os.environ else "2020-11-25"
 
 os.makedirs(VIDEO_ROOT, exist_ok=True)
@@ -22,7 +23,8 @@ os.makedirs(STATE_ROOT, exist_ok=True)
 
 app = fastapi.FastAPI()
 
-app.mount("/video", StaticFiles(directory=VIDEO_ROOT), name="static")
+app.mount("/video", StaticFiles(directory=VIDEO_ROOT), name="videos")
+app.mount("/static", StaticFiles(directory=STATIC_ROOT), name="static")
 
 templates = Jinja2Templates(directory="./templates")
 
