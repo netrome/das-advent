@@ -3,7 +3,11 @@
 
 module Upload exposing (Model(..), Msg(..), filesDecoder, init, main, subscriptions, update, view)
 
+import Base64
 import Browser
+import Element
+import Element.Background as Background
+import Element.Border as Border
 import File exposing (File)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -30,7 +34,7 @@ main =
 
 
 type Model
-    = Waiting
+    = Waiting String
     | Uploading Float
     | Done
     | Fail
@@ -38,7 +42,7 @@ type Model
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Waiting
+    ( Waiting ""
     , Cmd.none
     )
 
@@ -51,23 +55,29 @@ type Msg
     = GotFiles (List File)
     | GotProgress Http.Progress
     | Uploaded (Result Http.Error ())
+    | NewPasswd String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotFiles files ->
-            ( Uploading 0
-            , Http.request
-                { method = "POST"
-                , url = "/upload/"
-                , headers = []
-                , body = Http.multipartBody (List.map (Http.filePart "video") files)
-                , expect = Http.expectWhatever Uploaded
-                , timeout = Nothing
-                , tracker = Just "upload"
-                }
-            )
+            case model of
+                Waiting password ->
+                    ( Uploading 0
+                    , Http.request
+                        { method = "POST"
+                        , url = "/upload/"
+                        , headers = [ authHeader password ]
+                        , body = Http.multipartBody (List.map (Http.filePart "video") files)
+                        , expect = Http.expectWhatever Uploaded
+                        , timeout = Nothing
+                        , tracker = Just "upload"
+                        }
+                    )
+
+                _ ->
+                    ( Waiting "", Cmd.none )
 
         GotProgress progress ->
             case progress of
@@ -85,6 +95,9 @@ update msg model =
                 Err _ ->
                     ( Fail, Cmd.none )
 
+        NewPasswd passwd ->
+            ( Waiting passwd, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -101,14 +114,42 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
+    Element.layout
+        [ Background.image "/static/dark-blue.jpg" ]
+        (uploadBox model)
+
+
+uploadBox : Model -> Element.Element Msg
+uploadBox model =
+    Element.column
+        [ Element.centerX
+        , Element.centerY
+        , Element.padding 30
+        , Background.color (Element.rgba255 200 200 200 0.6)
+        , Border.rounded 5
+        ]
+        [ Element.text "Speak friend, and upload!"
+        , Element.html (innerView model)
+        ]
+
+
+innerView : Model -> Html Msg
+innerView model =
     case model of
-        Waiting ->
-            Html.input
-                [ type_ "file"
-                , multiple True
-                , on "change" (D.map GotFiles filesDecoder)
+        Waiting text ->
+            div []
+                [ Html.input
+                    [ type_ "text"
+                    , Html.Events.onInput NewPasswd
+                    ]
+                    []
+                , Html.input
+                    [ type_ "file"
+                    , multiple True
+                    , on "change" (D.map GotFiles filesDecoder)
+                    ]
+                    []
                 ]
-                []
 
         Uploading fraction ->
             h1 [] [ text (String.fromInt (round (100 * fraction)) ++ "%") ]
@@ -123,3 +164,12 @@ view model =
 filesDecoder : D.Decoder (List File)
 filesDecoder =
     D.at [ "target", "files" ] (D.list File.decoder)
+
+
+
+-- Http
+
+
+authHeader : String -> Http.Header
+authHeader password =
+    Http.header "Authorization" <| "Basic " ++ Base64.encode ("anyone:" ++ password)
