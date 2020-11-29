@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Set
 
 import hashlib
 import json
 import os
 import pathlib
+import random
 
 import fastapi
 from fastapi.templating import Jinja2Templates
@@ -26,10 +27,14 @@ class Greeting(pydantic.BaseModel):
     day: int
     video: str
 
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
+
 
 @app.get("/calendar_info/", response_model=List[Greeting])
 async def calendar():
-    return greetings_of_the_day(1)
+    return greetings_of_the_day(8)
 
 
 @app.get("/videos/")
@@ -79,17 +84,51 @@ def dump(given_name, content):
     open(full_path, "wb").write(content)
 
 
-def initiate_greetings(path):
-    json.dump([Greeting(day=i+1, video="").dict() for i in range(24)],
-                path.open("w"), indent=2)
+def initiate_greetings(path) -> List[Greeting]:
+    dump_greetings(path, [Greeting(day=i+1, video="") for i in range(24)])
+
+
+def dump_greetings(path, greetings: List[Greeting]):
+    encodable = list(map(Greeting.dict, greetings))
+    json.dump(encodable, path.open("w"), indent=2)
 
 
 def greetings_of_the_day(day: int) -> List[Greeting]:
     path = pathlib.Path(STATE_ROOT).joinpath("greetings.json")
+
     if not path.exists():
         initiate_greetings(path)
-    greetings = json.load(path.open())
-    return greetings
+
+    stored_greetings = list(map(Greeting.from_dict, json.load(path.open())))
+
+    live_greetings = update_greetings(day, stored_greetings)
+
+    if live_greetings != stored_greetings:
+        dump_greetings(path, live_greetings)
+
+    return live_greetings
 
 
+def update_greetings(day: int, stored_greetings: List[Greeting]) -> List[Greeting]:
+    assigned_videos = {greeting.video for greeting in stored_greetings if greeting.video != ""}
+
+    updated_greetings = list(map(update_greeting(assigned_videos), stored_greetings[:day]))
+
+    return updated_greetings + stored_greetings[day:]
+
+
+def update_greeting(already_assigned_videos):
+    def inner(greeting):
+        name = assign_new(already_assigned_videos) if greeting.video == "" else greeting.video
+        return Greeting(video=name, day=greeting.day)
+    return inner
+
+
+def assign_new(already_assigned: Set[str]) -> str:
+    choices = list(set(os.listdir(VIDEO_ROOT)) - already_assigned)
+    if len(choices) > 0:
+        chosen = random.choice(choices)
+        already_assigned.add(chosen)
+        return chosen
+    return ""
 
