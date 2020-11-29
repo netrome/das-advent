@@ -1,13 +1,20 @@
+from typing import List
+
+import hashlib
+import json
 import os
 import pathlib
-import hashlib
 
 import fastapi
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+import pydantic
+
 
 VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./video_uploads"
+STATE_ROOT = "./app_state"
 os.makedirs(VIDEO_ROOT, exist_ok=True)
+os.makedirs(STATE_ROOT, exist_ok=True)
 
 app = fastapi.FastAPI()
 
@@ -15,9 +22,14 @@ app.mount("/video", StaticFiles(directory=VIDEO_ROOT), name="static")
 
 templates = Jinja2Templates(directory="./templates")
 
-@app.get("/")
-async def hello():
-    return {"message": "Hello World"}
+class Greeting(pydantic.BaseModel):
+    day: int
+    video: str
+
+
+@app.get("/calendar_info/", response_model=List[Greeting])
+async def calendar():
+    return greetings_of_the_day(1)
 
 
 @app.get("/videos/")
@@ -65,4 +77,19 @@ def baptise(filename, content):
 def dump(given_name, content):
     full_path = pathlib.Path(VIDEO_ROOT).joinpath(given_name)
     open(full_path, "wb").write(content)
+
+
+def initiate_greetings(path):
+    json.dump([Greeting(day=i+1, video="").dict() for i in range(24)],
+                path.open("w"), indent=2)
+
+
+def greetings_of_the_day(day: int) -> List[Greeting]:
+    path = pathlib.Path(STATE_ROOT).joinpath("greetings.json")
+    if not path.exists():
+        initiate_greetings(path)
+    greetings = json.load(path.open())
+    return greetings
+
+
 
