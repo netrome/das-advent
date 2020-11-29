@@ -104,7 +104,7 @@ displayContent content =
 videoBox : String -> Element.Element Msg
 videoBox name =
     Element.html <|
-        Html.video [ HtmlAttrs.controls True, HtmlAttrs.height 300 ]
+        Html.video [ HtmlAttrs.controls True, HtmlAttrs.height 300, HtmlAttrs.width 600]
             [ Html.source [ HtmlAttrs.src <| videoUrl name ] []
             , Html.text "No comprendo senior"
             ]
