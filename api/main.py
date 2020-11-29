@@ -6,15 +6,18 @@ import json
 import os
 import pathlib
 import random
+import secrets
 
 import fastapi
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import pydantic
 
 
 VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./video_uploads"
 STATE_ROOT = os.environ["DAS_STATE_ROOT"] if "STATE_ROOT" in os.environ else "./app_state"
+UPLOAD_CREDENTIALS = os.environ["DAS_AUTH"] if "DAS_AUTH" in os.environ else "anyone:melon"
 STATIC_ROOT = "./static/"
 DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAY_ZERO" in os.environ else "2020-11-25"
 
@@ -22,6 +25,7 @@ os.makedirs(VIDEO_ROOT, exist_ok=True)
 os.makedirs(STATE_ROOT, exist_ok=True)
 
 app = fastapi.FastAPI()
+security = HTTPBasic()
 
 app.mount("/video", StaticFiles(directory=VIDEO_ROOT), name="videos")
 app.mount("/static", StaticFiles(directory=STATIC_ROOT), name="static")
@@ -53,14 +57,29 @@ async def video(name: str):
 
 
 @app.post("/upload/")
-async def upload(video: fastapi.UploadFile = fastapi.File(...)):
+async def upload(
+        video: fastapi.UploadFile = fastapi.File(...),
+        credentials: HTTPBasicCredentials = fastapi.Depends(security)
+        ):
+    [das_username, das_password] = UPLOAD_CREDENTIALS.split(":")
+
+    correct_username = secrets.compare_digest(credentials.username, das_username)
+    correct_password = secrets.compare_digest(credentials.password, das_password)
+
+    if not (correct_username and correct_password):
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
     await video.seek(0)
     content = await video.read()
 
     given_name = baptise(video.filename, content)
     dump(given_name, content)
 
-    return {"hello": "world"}
+    return {"message": "Uploaded!"}
 
 
 # Views ---
