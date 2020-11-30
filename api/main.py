@@ -19,7 +19,7 @@ VIDEO_ROOT = os.environ["DAS_FILEPATH"] if "DAS_FILEPATH" in os.environ else "./
 STATE_ROOT = os.environ["DAS_STATE_ROOT"] if "STATE_ROOT" in os.environ else "./app_state"
 UPLOAD_CREDENTIALS = os.environ["DAS_AUTH"] if "DAS_AUTH" in os.environ else "anyone:melon"
 STATIC_ROOT = "./static/"
-DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAY_ZERO" in os.environ else "2020-11-25"
+DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAS_DAY_ZERO" in os.environ else "2020-11-25"
 
 os.makedirs(VIDEO_ROOT, exist_ok=True)
 os.makedirs(STATE_ROOT, exist_ok=True)
