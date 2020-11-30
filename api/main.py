@@ -21,6 +21,8 @@ UPLOAD_CREDENTIALS = os.environ["DAS_AUTH"] if "DAS_AUTH" in os.environ else "an
 STATIC_ROOT = "./static/"
 DAY_ZERO = os.environ["DAS_DAY_ZERO"] if "DAS_DAY_ZERO" in os.environ else "2020-11-25"
 
+print("Starting server with day zero: {DAY_ZERO}")
+
 os.makedirs(VIDEO_ROOT, exist_ok=True)
 os.makedirs(STATE_ROOT, exist_ok=True)
 
