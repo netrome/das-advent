@@ -34,7 +34,7 @@ main =
 
 
 type Model
-    = Waiting String
+    = Waiting String Int
     | Uploading Float
     | Done
     | Fail
@@ -42,8 +42,8 @@ type Model
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Waiting ""
-    , Cmd.none
+    ( Waiting "" 0
+    , getVideos
     )
 
 
@@ -55,7 +55,8 @@ type Msg
     = GotFiles (List File)
     | GotProgress Http.Progress
     | Uploaded (Result Http.Error ())
-    | NewPasswd String
+    | GotVideoNames (Result Http.Error (List String))
+    | NewPasswd Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -63,7 +64,7 @@ update msg model =
     case msg of
         GotFiles files ->
             case model of
-                Waiting password ->
+                Waiting password numVideos ->
                     ( Uploading 0
                     , Http.request
                         { method = "POST"
@@ -77,7 +78,7 @@ update msg model =
                     )
 
                 _ ->
-                    ( Waiting "", Cmd.none )
+                    ( Waiting "" 0, Cmd.none )
 
         GotProgress progress ->
             case progress of
@@ -95,8 +96,16 @@ update msg model =
                 Err _ ->
                     ( Fail, Cmd.none )
 
-        NewPasswd passwd ->
-            ( Waiting passwd, Cmd.none )
+        NewPasswd numVideos passwd ->
+            ( Waiting passwd numVideos, Cmd.none )
+
+        GotVideoNames result ->
+            case result of
+                Ok videoNames ->
+                    ( Waiting "" (List.length videoNames), Cmd.none )
+
+                Err _ ->
+                    ( Fail, Cmd.none )
 
 
 
@@ -136,11 +145,11 @@ uploadBox model =
 innerView : Model -> Html Msg
 innerView model =
     case model of
-        Waiting text ->
+        Waiting secretWord numVideos ->
             div []
                 [ Html.input
                     [ type_ "text"
-                    , Html.Events.onInput NewPasswd
+                    , Html.Events.onInput (NewPasswd numVideos)
                     ]
                     []
                 , Html.input
@@ -149,6 +158,13 @@ innerView model =
                     , on "change" (D.map GotFiles filesDecoder)
                     ]
                     []
+                , p []
+                    [ text
+                        ("Vi har hittills tagit emot "
+                            ++ String.fromInt numVideos
+                            ++ " hälsningar."
+                        )
+                    ]
                 ]
 
         Uploading fraction ->
@@ -176,3 +192,17 @@ filesDecoder =
 authHeader : String -> Http.Header
 authHeader password =
     Http.header "Authorization" <| "Basic " ++ Base64.encode ("anyone:" ++ password)
+
+
+getVideos : Cmd Msg
+getVideos =
+    Http.get { url = "/videos/", expect = Http.expectJson GotVideoNames videoDecoder }
+
+
+
+-- Json
+
+
+videoDecoder : D.Decoder (List String)
+videoDecoder =
+    D.field "videos" <| D.list D.string
