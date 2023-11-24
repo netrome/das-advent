@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: das-advent
+  labels:
+    app: das-advent
+spec:
+  # Using two replicas gives us a race condition
+  # if both processes try to upload the same file
+  # or write to the app state at the same time.
+  # We'll probably not hit that with our load :)
+  replicas: 2
+  selector:
+    matchLabels:
+      app: das-advent
+  template:
+    metadata:
+      labels:
+        app: das-advent
+    spec:
+      containers:
+      - name: das-advent
+        image: netrome/das-advent:0.1.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DAS_DAY_ZERO
+          value: 2023-11-23
+        - name: DAS_STATE_ROOT
+          value: /app/mnt/app_state
+        - name: DAS_FILEPATH
+          value: /app/mnt/video_uploads
+        volumeMounts:
+        - mountPath: /app/mnt
+          name: das-advent-storage
+      volumes:
+      - name: das-advent-storage
+        persistentVolumeClaim:
+          claimName: das-advent-pvc
