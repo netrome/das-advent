@@ -3,6 +3,7 @@ module Calendar exposing (..)
 import Browser
 import Element
 import Element.Background as Background
+import Element.Border
 import Element.Events as Events
 import Element.Font as Font
 import Html
@@ -117,7 +118,7 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    Element.layout [ Background.image "/static/dark-blue.jpg" ]
+    Element.layout [ Background.image "/static/buble.jpg" ]
         (case model of
             HasContent content ->
                 mainDisplay content
@@ -133,19 +134,9 @@ view model =
 mainDisplay : Content -> Element.Element Msg
 mainDisplay content =
     Element.column []
-        [ uploadLink
-        , styledHeader
-        , poweredBy
+        [ styledHeader
         , displayContent content
         ]
-
-
-uploadLink : Element.Element Msg
-uploadLink =
-    Element.link [ Font.color niceWhite, fancyFont, Element.padding 20, Element.alignRight ]
-        { url = "/upload/"
-        , label = Element.text "Ladda upp din egna hälsning"
-        }
 
 
 styledHeader : Element.Element Msg
@@ -153,27 +144,13 @@ styledHeader =
     Element.el
         [ Font.size 60
         , Font.shadow { offset = ( 1, 0.5 ), blur = 5, color = niceDark }
-        , Font.color niceWhite
+        , Font.color niceDark
         , Element.centerX
         , Element.centerY
         , fancyFont
         , Element.padding 10
         ]
-        (Element.text "Familjens adventskalender 2020")
-
-
-poweredBy : Element.Element Msg
-poweredBy =
-    Element.el
-        [ Font.size 30
-        , Font.shadow { offset = ( 1, 0.5 ), blur = 5, color = niceDark }
-        , Font.color niceWhite
-        , Element.centerX
-        , Element.centerY
-        , fancyFont
-        , Element.padding 10
-        ]
-        (Element.text "av Mårten och Ruth")
+        (Element.text "Adventskalender 2023")
 
 
 displayContent : Content -> Element.Element Msg
@@ -201,15 +178,16 @@ greetingBox greeting =
 
 greetingCard : Greeting -> Element.Element Msg
 greetingCard greeting =
-    Element.image
+    Element.el
         [ Element.inFront <| styledDay greeting
         , Element.height <| Element.px cardHeight
         , Element.width <| Element.px cardWidth
         , Events.onClick <| Flipped greeting.day
         , Element.pointer
+        , Element.Border.width 1
+        , Element.Border.color niceWhite
         ]
-        { src = "/static/spark-card.jpg", description = "A christmas card" }
-
+        (Element.text "")
 
 styledDay : Greeting -> Element.Element Msg
 styledDay greeting =
