@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: das-advent
-        image: netrome/das-advent:0.1.1
+        image: netrome/das-advent:0.1.2
         ports:
         - containerPort: 8080
         env:
